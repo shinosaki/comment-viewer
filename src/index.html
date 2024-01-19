@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comment Viewer</title>
+</head>
+<body>
+  <label>Live URL:
+    <input type="url" id="input" name="url">
+    <button onclick="handler()">Connect</button>
+  </label>
+
+  <table style="width: 100%; height: 80vh; overflow-y: scroll; background-color: lightgray;">
+    <thead>
+      <tr>
+        <th>Count</th>
+        <th>Time</th>
+        <th>User</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody id="list">
+    </tbody>
+  </table>
+
+  <script>
+    const input = document.getElementById('input')
+    const list = document.getElementById('list')
+
+    const handler = () => {
+      const url = input.value
+      try { new URL(url) } catch { throw new Error('Invalid URL') }
+
+      const wsHost = new URL(window.location.origin)
+      wsHost.protocol = wsHost.protocol.startsWith('https') ? 'wss' : 'ws'
+      
+      const ws = new WebSocket(`${wsHost.origin}/ws?url=${url}`)
+
+      ws.addEventListener('message', ({ data }) => {
+        const z = JSON.parse(data)
+        console.log(z)
+
+        const item = document.createElement('tr');
+
+        [
+          z.chat.no,
+          Math.round(z.chat.vpos / 100),
+          z.chat.user_id,
+          z.chat.content,
+        ].map(v => {
+          const e = document.createElement('td')
+          e.textContent = v
+          item.appendChild(e)
+        })
+
+        list.appendChild(item)
+      })
+    }
+  </script>
+</body>
+</html>
